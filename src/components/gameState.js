@@ -22,3 +22,19 @@ export const scoreState = atom({
   default: 0 // default value (aka initial value)
 });
 
+export const bulletPositionState = atom({
+  key: "bulletPosition", // unique ID (with respect to other atoms/selectors)
+ //make value where enemy is destroyed
+  default: { x: 0, y: 0, z: 0 } // default value (aka initial value)
+  
+});
+
+export const explosionPositionState = atom({
+  key: "explosionPosition", // unique ID (with respect to other atoms/selectors)
+  default: [] // default value (aka initial value)
+});
+
+
+
+
+

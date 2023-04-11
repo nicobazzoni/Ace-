@@ -7,6 +7,9 @@ import {
   shipPositionState,
   enemyPositionState,
   laserPositionState,
+  explosionPositionState,
+  
+ 
   scoreState
 } from "./gameState";
 import { Trail, useGLTF} from "@react-three/drei";

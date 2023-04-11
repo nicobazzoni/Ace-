@@ -23,29 +23,16 @@ useEffect(() => {
 }, []); 
 
 
-
-
-
-
-  return (
+return (
     <div className="App ">
       
-
-
-
-
 <div className='h-screen'>
  
   <Jet />
  
 </div>
 
-
-
-
- 
-
-    </div>
+ </div>
   )
 }
 

@@ -1,6 +1,6 @@
 import { MeshPhongMaterial, Vector3 } from "three";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useGLTF, Stage, PresentationControls, OrbitControls, Gltf, Cloud, Stars, useBoxProjectedEnv, Html, useProgress, MeshWobbleMaterial } from "@react-three/drei";
+import { useGLTF, Stage, PresentationControls, OrbitControls, Gltf, Cloud, Stars, useBoxProjectedEnv, Html, useProgress, Sparkles, MeshWobbleMaterial, Text } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
@@ -9,9 +9,10 @@ import { RecoilRoot, useRecoilState, useRecoilValue } from "recoil";
 import {
   shipPositionState,
   enemyPositionState,
-
+  
   laserPositionState,
-  scoreState
+  scoreState,
+  bulletPositionState
 
 } from "./gameState";
 import { Suspense } from "react";
@@ -124,7 +125,7 @@ function Engine() {
   return (
     <group ref={ship} >
 
-      <Flyer position={[0, 0, 0]} scale={[0.2, 0.2, 0.2]}  rotation={[-3,0,3]}  />
+      <Flyer position={[0, -2, 0]} scale={[0.2, 0.2, 0.2]}  rotation={[-3,0,3]}  />
 
     </group>
   );
@@ -143,6 +144,9 @@ function Sound() {
   };
   return null;
 }
+
+
+
 
 
 
@@ -181,7 +185,9 @@ function Terrain() {
   );
 }
     
-//create explosions function thats uses boom.png as a texture that fires when the   const [enemies, setEnemies] = useRecoilState(enemyPositionState); is true and less than 1
+
+
+
 
 
 
@@ -258,16 +264,6 @@ function NME2() {
 
 
 
-
-
-
-
- 
-  
-
- 
- 
-
 function LaserController() {
   const shipPosition = useRecoilValue(shipPositionState);
   const [lasers, setLasers] = useRecoilState(laserPositionState);
@@ -321,22 +317,113 @@ function Lasers() {
   );
 }
 
-//create explosion with particles  
-function Explosion(props) {
-  const [ref] = useParticle()
+//function that shows huge tortionGeometry objects that are used as the background for the game
+
+function Background() {
+  const [enemies, setEnemies] = useRecoilState(enemyPositionState);
+  const [lasers, setLaserPositions] = useRecoilState(laserPositionState);
+  const [score, setScore] = useRecoilState(scoreState);
+  const scene = useThree(({ scene }) => scene);
+  const loader = new TextureLoader();
+  const iris = loader.load("/iris.png");
+  const [enemies2, setEnemies2] = useRecoilState(enemyPositionState2);
+
   return (
-    <mesh ref={ref} {...props}>
-      <sphereBufferGeometry attach="geometry" args={[1]} />
-      <meshStandardMaterial attach="material" color="red" />
-    </mesh>
-  )
+    <group>
+      <mesh position={[0, 0, 0]}>
+        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
+        <meshStandardMaterial
+          attach="material"
+          color="red"
+          roughness={0.5}
+          metalness={0.5}
+          map={iris}
+        />
+      </mesh>
+      <mesh position={[0, 0, 0]}>
+        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
+        <meshStandardMaterial
+          attach="material"
+          color="blue"
+          roughness={0.5}
+          metalness={0.5}
+          map={iris}
+        />
+      </mesh>
+      <mesh position={[0, 0, 0]}>
+        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
+        <meshStandardMaterial
+          attach="material"
+          color="green"
+          roughness={0.5}
+          metalness={0.5}
+          map={iris}
+        />
+      </mesh>
+      <mesh position={[0, 0, 0]}>
+        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
+        <meshStandardMaterial
+          attach="material"
+          color="yellow"
+          roughness={0.5}
+          metalness={0.5}
+          map={iris}
+        />
+      </mesh>
+
+
+    </group>
+  );
 }
 
 
 
 
-// Calculate the distance between two points in 3d space.
-// Used to detect lasers intersecting with enemies.
+
+
+
+
+//function that shows score using setScore state and R3f text component
+
+function Score() {
+  
+  const [enemies, setEnemies] = useRecoilState(enemyPositionState);
+  const [lasers, setLaserPositions] = useRecoilState(laserPositionState);
+  const [score, setScore] = useRecoilState(scoreState);
+  const scene = useThree(({ scene }) => scene);
+
+  return (
+    <group>
+      <Text
+        position={[-2, -2, 0]}
+        color="red"
+        fontSize={0.5}
+        maxWidth={10}
+        lineHeight={1}
+        letterSpacing={0.02}
+        textAlign="center"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {score}
+      </Text>
+    </group>
+  );
+}
+
+
+
+//explosion function that uses enemy position state to create a new state for the explosion
+
+
+
+
+
+
+
+
+
+
 function distance(p1, p2) {
   const a = p2.x - p1.x;
   const b = p2.y - p1.y;
@@ -349,13 +436,8 @@ function GameTimer() {
   const [enemies, setEnemies] = useRecoilState(enemyPositionState);
   const [lasers, setLaserPositions] = useRecoilState(laserPositionState);
   const [score, setScore] = useRecoilState(scoreState);
+const [bullets, setBullets] = useRecoilState(bulletPositionState);
   const scene = useThree(({ scene }) => scene);
-  const loader = new TextureLoader();
-  const position =  useRecoilState(enemyPositionState);
-  const [hitEnemies, setHitEnemies] = useState([]);
-  const [hit, setHit] = useState(false); 
-  const [explosion, setExplosion] = useState(false);
-
 
 
   useFrame(({ mouse }) => {
@@ -386,10 +468,8 @@ setEnemies(
         .map((enemy) => ({ x: enemy.x, y: enemy.y, z: enemy.z + ENEMY_SPEED }))
         .filter((enemy, idx) => !hitEnemies[idx] && enemy.z < 0)
         
-   
-        
-        
-    );
+      );
+    
     // Move the Lasers and remove lasers at end of range or that have hit the ground.
     setLaserPositions(
       lasers
@@ -415,15 +495,18 @@ setEnemies(
       ]);
     } 
 
-  
-  
-  
+    //play explosion sound when enemy is hit
+    if (hitEnemies.includes(true) && enemies.length > 0) {
+      const sound = new Audio("/boom.wav");
+      sound.play();
+    }
 
-   
-   
+    //flash Sparkles from drei when enemy is hit using enemy position state
 
 
-  });
+
+ 
+});
 
 }
 
@@ -454,15 +537,19 @@ return (
     </Suspense>
     <Sound />
     <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
-    <Cloud   position={[1, 5, 5]} scale={[0.5, 0.5, 0.5]}  rotation={[3,3,3]} intensity={0.5}  /> 
+    <Cloud   position={[-1, 4, 5]} scale={[0.5, 0.5, 0.5]}  rotation={[3,3,3]} intensity={0.5}  /> 
     <NME />
     <Terrain />
     <NME2/> 
     <Target />
-    
-   
+    <Score />
+  
+
     <Lasers />
     <LaserController />
+
+  
+   
     <GameTimer /> 
      
    </RecoilRoot>
