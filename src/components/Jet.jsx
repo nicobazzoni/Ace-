@@ -25,6 +25,7 @@ import {Physics, useParticle} from '@react-three/cannon';
 
 
 
+
 const LASER_RANGE = 100;
 const LASER_Z_VELOCITY = 1;
 const ENEMY_SPEED = 0.2;
@@ -193,6 +194,7 @@ function Terrain() {
 
 
 
+
 function Target() {
   const rearTarget = useRef();
   const frontTarget = useRef();
@@ -224,7 +226,6 @@ function Target() {
 
 }
 
-// Manages Drawing enemies that currently exist in state
 
 
 function NME() {
@@ -319,71 +320,108 @@ function Lasers() {
 
 //function that shows huge tortionGeometry objects that are used as the background for the game
 
-function Background() {
+
+
+
+
+//function that show 'you win' text when score reaches 20 points
+
+function Win() {
+  
   const [enemies, setEnemies] = useRecoilState(enemyPositionState);
   const [lasers, setLaserPositions] = useRecoilState(laserPositionState);
   const [score, setScore] = useRecoilState(scoreState);
   const scene = useThree(({ scene }) => scene);
-  const loader = new TextureLoader();
-  const iris = loader.load("/iris.png");
-  const [enemies2, setEnemies2] = useRecoilState(enemyPositionState2);
 
   return (
     <group>
-      <mesh position={[0, 0, 0]}>
-        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
-        <meshStandardMaterial
-          attach="material"
-          color="red"
-          roughness={0.5}
-          metalness={0.5}
-          map={iris}
-        />
-      </mesh>
-      <mesh position={[0, 0, 0]}>
-        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
-        <meshStandardMaterial
-          attach="material"
-          color="blue"
-          roughness={0.5}
-          metalness={0.5}
-          map={iris}
-        />
-      </mesh>
-      <mesh position={[0, 0, 0]}>
-        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
-        <meshStandardMaterial
-          attach="material"
-          color="green"
-          roughness={0.5}
-          metalness={0.5}
-          map={iris}
-        />
-      </mesh>
-      <mesh position={[0, 0, 0]}>
-        <torusGeometry attach="geometry" args={[100, 20, 16, 100]} />
-        <meshStandardMaterial
-          attach="material"
-          color="yellow"
-          roughness={0.5}
-          metalness={0.5}
-          map={iris}
-        />
-      </mesh>
+      <Text
+        position={[0, 0, 0]}
+        color="red"
+        fontSize={1.5}
+        maxWidth={10}
+        lineHeight={1}
+        letterSpacing={0.02}
+        textAlign="center"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {score === 20 ? "YOU WIN!" : null} 
+        
+      </Text>
+
+    </group> 
+    
+  ) 
+ 
+   
+  
+  
+}
+
+function Lose() {
+  const [timer, setTimer] = useState(30);
+  const [enemies, setEnemies] = useRecoilState(enemyPositionState);
+  const [lasers, setLaserPositions] = useRecoilState(laserPositionState);
+  const [score, setScore] = useRecoilState(scoreState);
+  const [clock] = useState('clock')
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimer((timer) => timer - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
 
+  if (timer === 0 && score < 20) {
+    setEnemies([]);
+    setLaserPositions([]);
+    setScore(0);
+    setTimer(20);
+  }
+
+  return (
+    <group>
+      <Text fontSize={0.2} position={[3, 2.5, 0]}>
+      Time left
+      </Text>
+      <Text
+        position={[3, 2, 0]}
+        color="blue"
+        fontSize={0.5}
+        maxWidth={10}
+        lineHeight={1}
+        letterSpacing={0.02}
+        textAlign="center"
+        anchorX="center"
+        anchorY="middle"
+      >
+        
+        {timer}
+     {timer === 0 && score < 20 ? <Text position={[0, 0, 0]}
+        color="red"
+        fontSize={0.2}
+        maxWidth={10}
+        lineHeight={1}
+        letterSpacing={0.04}
+        textAlign="center"
+        anchorX="center"
+        anchorY="middle"
+      > YOU LOSE</Text> : null}
+      </Text>
     </group>
+
   );
+  //restart game when timer reaches 0 and score is less than 20
+ 
+
+
+
 }
 
 
 
-
-
-
-
-
-//function that shows score using setScore state and R3f text component
 
 function Score() {
   
@@ -394,6 +432,9 @@ function Score() {
 
   return (
     <group>
+      <Text fontSize={0.5} position={[-2.1, -3, 0]}>
+        Kills
+      </Text>
       <Text
         position={[-2, -2, 0]}
         color="red"
@@ -413,16 +454,6 @@ function Score() {
 
 
 
-//explosion function that uses enemy position state to create a new state for the explosion
-
-
-
-
-
-
-
-
-
 
 function distance(p1, p2) {
   const a = p2.x - p1.x;
@@ -436,9 +467,10 @@ function GameTimer() {
   const [enemies, setEnemies] = useRecoilState(enemyPositionState);
   const [lasers, setLaserPositions] = useRecoilState(laserPositionState);
   const [score, setScore] = useRecoilState(scoreState);
-const [bullets, setBullets] = useRecoilState(bulletPositionState);
+const [bullets, setBullets] = useRecoilState(enemyPositionState);
   const scene = useThree(({ scene }) => scene);
-
+  
+ 
 
   useFrame(({ mouse }) => {
     // Calculate hits and remove lasers and enemies, increase score.
@@ -469,6 +501,7 @@ setEnemies(
         .filter((enemy, idx) => !hitEnemies[idx] && enemy.z < 0)
         
       );
+     
     
     // Move the Lasers and remove lasers at end of range or that have hit the ground.
     setLaserPositions(
@@ -494,26 +527,63 @@ setEnemies(
         }
       ]);
     } 
+    //add a new bullet every 5 seconds
+   
+
 
     //play explosion sound when enemy is hit
     if (hitEnemies.includes(true) && enemies.length > 0) {
       const sound = new Audio("/boom.wav");
       sound.play();
     }
+ 
+   
+    //explosion animation when enemy is hit
+    if (hitEnemies.includes(true) && enemies.length > 0) {
 
-    //flash Sparkles from drei when enemy is hit using enemy position state
+    
+    
+      
+     //load boom.glb file
+      const loader = new GLTFLoader();
+      const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      loader.load("/boom.glb", function (gltf) {
+        const explosion = gltf.scene;
+        explosion.scale.set(0.1, 0.1, 0.1);
+        explosion.rotation.set(0, 0, 0);
+        //include material to make explosion red
+        explosion.traverse((o) => {
+          if (o.isMesh) o.material = material;
+        });
 
 
 
+
+        explosion.position.set(
+          enemies[hitEnemies.indexOf(true)].x,
+          enemies[hitEnemies.indexOf(true)].y,
+          enemies[hitEnemies.indexOf(true)].z
+        );
+
+        
+
+        scene.add(explosion);
+        //make explosion disappear after 1 second
+        setTimeout(() => {
+          scene.remove(explosion);
+        }, 500);
+      });
+
+  
+    }
+   
  
 });
 
+  return null;
+
 }
 
-
-
-
-//create function that triggers explosion when enemy is hit at the position of the enemy
 
 
 
@@ -543,10 +613,15 @@ return (
     <NME2/> 
     <Target />
     <Score />
+  <Win />
+  <Lose />
+ 
   
 
     <Lasers />
     <LaserController />
+
+   
 
   
    
