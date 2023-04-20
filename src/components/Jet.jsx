@@ -413,9 +413,6 @@ function Lose() {
     </group>
 
   );
-  //restart game when timer reaches 0 and score is less than 20
- 
-
 
 
 }
@@ -645,3 +642,6 @@ return (
 
 export default Jet;
 
+
+
+//git erase origin 
