@@ -1,6 +1,6 @@
 import { MeshPhongMaterial, Vector3 } from "three";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useGLTF, Stage, PresentationControls, OrbitControls, Gltf, Cloud, Stars, useBoxProjectedEnv, Html, useProgress, Sparkles, MeshWobbleMaterial, Text } from "@react-three/drei";
+import { useGLTF, Stage, PresentationControls, OrbitControls, Gltf, Cloud, Stars, useBoxProjectedEnv, Html, useProgress, Sparkles, MeshWobbleMaterial, Text, RandomizedLight } from "@react-three/drei";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
@@ -25,6 +25,7 @@ import {Physics, useParticle} from '@react-three/cannon';
 
 
 
+//create extend function to load meshWobbleMaterial
 
 const LASER_RANGE = 100;
 const LASER_Z_VELOCITY = 1;
@@ -234,6 +235,7 @@ function NME() {
     <group>
       {enemies.map((enemy) => (
         <mesh position={[enemy.x, enemy.y, enemy.z]} key={`${enemy.x}`}>
+          
    <F35 position={[3, 3, 0]} scale={[1, 1, 1]} metalness={1} rotation={[0,0,0]}    />
  </mesh>
       ))}
@@ -241,6 +243,9 @@ function NME() {
   );
 
 }
+
+
+
 
 function NME2() {
   const enemies = useRecoilValue(enemyPositionState);
@@ -252,7 +257,8 @@ function NME2() {
           <pointLight position={[-5, -2, 2]} />
 
     <Flyer2 position={[-7, 4, 6] } scale={[1, 1, 1]} metalness={1} sprite={3} rotation={[0,0,0]}  />
-   <Flyer2 position={[7, 12, 6] } scale={[1, 1, 1]} sprite={3} rotation={[0,0,0]}  />
+    <Flyer2 position={[7, 12, 6] } scale={[1, 1, 1]} sprite={3} rotation={[0,0,0]}  /> 
+   
           
         </mesh>
       ))}
@@ -304,14 +310,14 @@ function LaserController() {
 // Draws all of the lasers existing in state.
 function Lasers() {
   const loader = new TextureLoader();
-  const iris = loader.load("/iris.png");
+  const iris = loader.load("/boom.png");
   const lasers = useRecoilValue(laserPositionState);
   return (
     <group>
       {lasers.map((laser) => (
         <mesh position={[laser.x, laser.y, laser.z]} key={`${laser.id}`}>
           <sphereBufferGeometry attach="geometry" args={[1]} />
-          <meshStandardMaterial attach="material" map={iris}   />
+          <meshStandardMaterial attach="material" color='red'  />
         </mesh>
       ))}
     </group>
@@ -320,6 +326,30 @@ function Lasers() {
 
 //function that shows huge tortionGeometry objects that are used as the background for the game
 
+
+
+function Streak() {
+  <Trail
+  width={0.2} // Width of the line
+  color={'hotpink'} // Color of the line
+  length={1} // Length of the line
+  decay={1} // How fast the line fades away
+  local={false} // Wether to use the target's world or local positions
+  stride={0} // Min distance between previous and current point
+  interval={1} // Number of frames to wait before next calculation
+  target={undefined} // Optional target. This object will produce the trail.
+  attenuation={(width) => width} // A function to define the width in each point along it.
+>
+  {/* If `target` is not defined, Trail will use the first `Object3D` child as the target. */}
+  <mesh>
+    <sphereGeometry />
+    <meshBasicMaterial />
+  </mesh>
+
+  {/* You can optionally define a custom meshLineMaterial to use. */}
+  {/* <meshLineMaterial color={"red"} /> */}
+</Trail>
+}
 
 
 
@@ -383,11 +413,11 @@ function Lose() {
 
   return (
     <group>
-      <Text fontSize={0.2} position={[3, 2.5, 0]}>
+      <Text fontSize={0.2} position={[1, -3.5, 0]}>
       Time left
       </Text>
       <Text
-        position={[3, 2, 0]}
+        position={[1, -3, 0]}
         color="blue"
         fontSize={0.5}
         maxWidth={10}
@@ -418,7 +448,8 @@ function Lose() {
 }
 
 
-
+//play music
+  
 
 function Score() {
   
@@ -429,11 +460,11 @@ function Score() {
 
   return (
     <group>
-      <Text fontSize={0.5} position={[-2.1, -3, 0]}>
+      <Text fontSize={0.2} position={[-1, -3.5, 0]}>
         Kills
       </Text>
       <Text
-        position={[-2, -2, 0]}
+        position={[-1, -3, 0]}
         color="red"
         fontSize={0.5}
         maxWidth={10}
@@ -552,15 +583,14 @@ setEnemies(
         explosion.traverse((o) => {
           if (o.isMesh) o.material = material;
         });
-
-
-
-
-        explosion.position.set(
+         
+          explosion.position.set(
           enemies[hitEnemies.indexOf(true)].x,
           enemies[hitEnemies.indexOf(true)].y,
           enemies[hitEnemies.indexOf(true)].z
         );
+
+        explosion.rotation.set(0, 0, 0);
 
         
 
@@ -573,6 +603,11 @@ setEnemies(
 
   
     }
+
+    //use drei trail to create motion effecct for lasers
+
+
+
    
  
 });
@@ -580,6 +615,68 @@ setEnemies(
   return null;
 
 }
+
+
+
+//floating spheres that move behind the planes that look like planets made of meshwobblematerial
+
+function Shoooot() {
+  const [enemies, setEnemies] = useRecoilState(enemyPositionState);
+  const scene = useThree(({ scene }) => scene);
+
+  return (
+    <>
+      {enemies.map((enemy) => (
+        <group key={enemy.id} position={[enemy.x, enemy.y, enemy.z]}>
+          <mesh>
+            <sphereGeometry attach="geometry" args={[0.5, 13 ,25, ]} />
+            <meshPhongMaterial
+              attach="material"
+              color="black"
+              opacity={0.5}
+              speed={10}
+              factor={0.2}
+              shininess={100}
+              metalness={0.5}
+              map={new THREE.TextureLoader().load("/iris.png")}
+
+            />
+          </mesh>
+
+
+        </group>
+      ))}
+    </>
+  );
+}
+
+
+
+
+
+<Trail
+  width={0.2} // Width of the line
+  color={'hotpink'} // Color of the line
+  length={1} // Length of the line
+  decay={1} // How fast the line fades away
+  local={false} // Wether to use the target's world or local positions
+  stride={0} // Min distance between previous and current point
+  interval={1} // Number of frames to wait before next calculation
+  target={null} // Optional target. This object will produce the trail.
+  attenuation={(width) => width} // A function to define the width in each point along it.
+>
+  {/* If `target` is not defined, Trail will use the first `Object3D` child as the target. */}
+  <mesh>
+    <sphereGeometry />
+    <meshBasicMaterial />
+  </mesh>
+
+  {/* You can optionally define a custom meshLineMaterial to use. */}
+  {/* <meshLineMaterial color={"red"} /> */}
+</Trail>
+
+
+
 
 
 
@@ -605,7 +702,9 @@ return (
     <Sound />
     <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
     <Cloud   position={[-1, 4, 5]} scale={[0.5, 0.5, 0.5]}  rotation={[3,3,3]} intensity={0.5}  /> 
-    <NME />
+    <NME /> 
+    <Trail position={[1,1,1]}  />
+    
     <Terrain />
     <NME2/> 
     <Target />
@@ -613,11 +712,14 @@ return (
   <Win />
   <Lose />
  
+
+  <RandomizedLight castShadow amount={8} frames={100} position={[5, 5, -10]} />
+
   
 
     <Lasers />
     <LaserController />
-
+  
    
 
   
